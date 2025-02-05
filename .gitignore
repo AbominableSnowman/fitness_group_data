@@ -1,3 +1,6 @@
+credentials/
+
+# BELOW IS A SAMPLE .gitignore FILE
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
