@@ -1,112 +1,16 @@
-# %% Imports for google sheet extract
-from googleapiclient.discovery import build
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-import pandas as pd
-import os
-
-# Imports for plotting
+# Imports
 import matplotlib.pyplot as plt
 import matplotlib.ticker as tck
 import numpy as np
 from cycler import cycler
 from matplotlib import colors as mcolors
-import datetime
+import pandas as pd
 import seaborn as sns
+
+from fitness_data_ingest import get_credentials, extract_eu_data
 
 
 # %% Functions
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"] # Scopes for read-only access to Google Sheets
-
-
-from google.auth.exceptions import RefreshError
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-import os
-
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
-
-def get_credentials():
-    creds = None
-    # Check if token.json exists
-    if os.path.exists("token.json"):
-        try:
-            creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-            print("Credentials loaded from token.json")
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())  # Refresh expired credentials
-                print("Credentials refreshed.")
-        except RefreshError:
-            print("Token is invalid or revoked. Reauthorizing...")
-            creds = None  # Force reauthorization
-
-    # If no valid credentials, reauthorize
-    if not creds or not creds.valid:
-        print("Reauthorizing...")
-        flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-        creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open("token.json", "w") as token:
-            token.write(creds.to_json())
-        print("New credentials saved to token.json.")
-
-    return creds
-
-
-
-
-def extract_eu_data(data_range: str, goals_range: str, token_path="./fitness_group_eu/token.json"):
-    """
-    Extracts data and goals from a Google Sheets document as Pandas DataFrames.
-    
-    Args:
-        data_range (str): The range of the "Data" sheet (e.g., 'Data!A1:Z100').
-        goals_range (str): The range of the "Goals" sheet (e.g., 'Goals!A1:B10').
-        token_path (str): Path to the token.json file for authentication.
-
-    Returns:
-        tuple: Two Pandas DataFrames (data_df, goals_df).
-    """
-    sheet_id = "15rtnqKhm25KOZ0UGZ4E2jzSaClvfpD8VhZXC8Z2ZWL8"
-    # Load credentials
-    creds = get_credentials()
-    
-    try:
-        # Initialize the Sheets API
-        service = build("sheets", "v4", credentials=creds)
-        sheet = service.spreadsheets()
-        
-        # Fetch data from the "Data" sheet
-        data_result = sheet.values().get(spreadsheetId=sheet_id, range=data_range).execute()
-        data_values = data_result.get("values", [])
-        data_df = pd.DataFrame(data_values[1:], columns=data_values[0])  # Convert to DataFrame with headers
-        
-        # Fetch data from the "Goals" sheet
-        goals_result = sheet.values().get(spreadsheetId=sheet_id, range=goals_range).execute()
-        goals_values = goals_result.get("values", [])
-        goals_df = pd.DataFrame(goals_values[1:], columns=goals_values[0])  # Convert to DataFrame with headers
-
-        for col in data_df.columns[1:]:
-            data_df[col] = pd.to_numeric(data_df[col])
-
-        for col in goals_df.columns:
-            goals_df[col] = pd.to_numeric(goals_df[col])
-                
-        return data_df, goals_df
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return None, None
-
-
-def extract_us_data():
-
-    return None
-
-
-# %% Visualization functions
 def adjust_positions(names, goals, separation=2):
     # Sort names and goals based on goals in descending order
     sorted_indices = sorted(range(len(goals)),
