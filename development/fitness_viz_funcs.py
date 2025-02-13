@@ -7,7 +7,10 @@ from matplotlib import colors as mcolors
 import pandas as pd
 import seaborn as sns
 
-from fitness_data_ingest import get_credentials, extract_eu_data
+import sys
+from pathlib import Path
+sys.path.append(str(Path.cwd().parent))
+from pages.data_loader import get_credentials, extract_eu_data
 
 
 # %% Functions

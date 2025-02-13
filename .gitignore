@@ -2,3 +2,4 @@ credentials/
 .env
 __pycache__/
 .streamlit/
+development/
